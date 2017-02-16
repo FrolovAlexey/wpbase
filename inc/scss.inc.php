@@ -3,7 +3,7 @@ if (version_compare(PHP_VERSION, '5.4') < 0) {
     throw new \Exception('scssphp requires PHP 5.4 or above');
 }
 /**
- * Include scss framework files
+ * Include scss framewark files
  * get source of scssphp lib from https://github.com/leafo/scssphp
  * @link https://github.com/leafo/scssphp
  */
@@ -47,6 +47,7 @@ if (! class_exists('scssc', false)) {
             public $scssSource;
             public $scssResult;
             public $scssSchedule;
+            public $scssFormat;
 
             public function __construct(){
                 add_action('customize_register', array($this, 'initCustomizeMenuRegister'));
@@ -66,6 +67,11 @@ if (! class_exists('scssc', false)) {
                 $this->scssSource = get_theme_mod('scss_path', '');
                 $this->scssResult = get_theme_mod('scss_path_result', '');
                 $this->scssSchedule = get_theme_mod('scss_cache_timestamp', 3600);
+                $this->scssFormat = get_theme_mod('scss_format_options', 'Nested');
+
+                if (substr($this->scssResult, 0, -1) != '/') {
+                    $this->scssResult .= '/';
+                }
 
 
                 $every_time = get_theme_mod('scss_compil_everytime', false);
@@ -156,7 +162,7 @@ if (! class_exists('scssc', false)) {
 
                             ));
                             $scss->setVariables($variables);
-                            $scss->setFormatter('Leafo\ScssPhp\Formatter\Compressed');
+                            $scss->setFormatter('Leafo\ScssPhp\Formatter\\' . $this->scssFormat);
 
                             if ( $files = scandir($directory, 1)) {
                                 foreach ($files as $file) {
@@ -164,7 +170,10 @@ if (! class_exists('scssc', false)) {
 
                                     if ($file_parts['extension'] == 'scss' &&  $file_parts['filename'][0] != '_' ){
                                         $css_file = $scss->compile('@import "' . $file . '";');
-                                        file_put_contents($directory_output .  $file_parts['filename'] . '.css', $css_file);
+                                        $output_file = $directory_output .  $file_parts['filename'] . '.css';
+                                        $output_path = dirname($output_file);
+                                        $this->createPath($output_path);
+                                        file_put_contents($output_file, $css_file);
 
                                     }
                                 }
@@ -178,6 +187,18 @@ if (! class_exists('scssc', false)) {
 
                     }
                 }
+            }
+
+            /**
+             * Create path if not exist
+             * @param string $path
+             * @return bool
+             */
+            public function createPath($path) {
+                if (is_dir($path)) return true;
+                $prev_path = substr($path, 0, strrpos($path, '/', -2) + 1 );
+                $return = $this->createPath($prev_path);
+                return ($return && is_writable($prev_path)) ? mkdir($path) : false;
             }
 
             /**
@@ -294,6 +315,33 @@ if (! class_exists('scssc', false)) {
                         'priority' => 10,
                     )
                 ) );
+
+                $wp_customize->add_setting( 'scss_format_options',
+                    array(
+                        'default' => '',
+                        'type' => 'theme_mod',
+                        'capability' => 'edit_theme_options',
+                        'transport' => 'postMessage',
+                    )
+                );
+                $wp_customize->add_control( new WP_Customize_Control(
+                    $wp_customize,
+                    'theme_scss_format_options',
+                    array(
+                        'label' => __( 'Output format', 'scss' ),
+                        'section' => 'theme_scss_options',
+                        'type' => 'select',
+                        'settings' => 'scss_format_options',
+                        'priority' => 10,
+                        'choices'  => array(
+                            'Expanded'  => 'Expanded',
+                            'Nested' => 'Nested',
+                            'Compresse ' => 'Compressed',
+                            'Compact' => 'Compact',
+                            'Crunche' => 'Crunched',
+                        ),
+                    )
+                ) );
             }
 
             /**
@@ -304,7 +352,7 @@ if (! class_exists('scssc', false)) {
                 <script type="text/javascript">
                     jQuery(document).ready(function ($) {
                         var enableScssInput = $( '#customize-control-theme_enable_scss input' ),
-                            scssSettings = $('#customize-control-theme_scc_path,#customize-control-theme_scc_path_result,#customize-control-theme_scc_compil_everytime,#customize-control-theme_scc_cache_timestamp'),
+                            scssSettings = $('#customize-control-theme_scc_path,#customize-control-theme_scc_path_result,#customize-control-theme_scc_compil_everytime,#customize-control-theme_scc_cache_timestamp,#customize-control-theme_scss_format_options'),
                             scssEveryTime = $('#customize-control-theme_scc_compil_everytime input'),
                             scssTimestamp = $('#customize-control-theme_scc_cache_timestamp');
 
