@@ -20,9 +20,5 @@ function base_scripts_styles() {
 	
 	// Implementation stylesheet.
 	wp_enqueue_style( 'base-theme', get_template_directory_uri() . '/theme.css', array() );	
-
-	// Loads the Internet Explorer specific stylesheet.
-	wp_enqueue_style( 'base-ie', get_template_directory_uri() . '/css/ie.css' );
-	wp_style_add_data( 'base-ie', 'conditional', 'lt IE 9' );
 }
 add_action( 'wp_enqueue_scripts', 'base_scripts_styles' );
