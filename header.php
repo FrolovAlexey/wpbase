@@ -24,7 +24,7 @@
 			
 			<?php /* Custom logo support. Uncomment or delete on production
 			<?php if ( function_exists( 'the_custom_logo' ) ) : ?>
-				<div class="logo">
+				<div class="logo" itemscope itemtype="http://schema.org/Brand">
 				 <?php the_custom_logo(); ?>
 				</div>
 			<?php endif; ?>			
