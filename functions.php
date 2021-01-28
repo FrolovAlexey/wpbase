@@ -1,5 +1,8 @@
 <?php
 
+// Scss settings
+include( get_template_directory() . '/inc/scss.inc.php' );
+
 // Default settings
 include( get_template_directory() . '/inc/default.php' );
 
